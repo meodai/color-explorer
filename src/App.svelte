@@ -12,22 +12,18 @@
   // Visibility derived from hex
   const isVisible = derived(colorStore, $c => Boolean($c.hex));
 
-  function fetchRandomColor(hash) {
-    console.clear();
-    console.log('Fetching random color...');
-    fetchColorData(hash);
-  }
 
   // listen for hash changes
+  /*
   window.addEventListener('hashchange', () => {
     const hash = window.location.hash;
     console.log('Hash changed:', hash);
     fetchRandomColor(hash || null);
-  });
+  });*/
 
   onMount(() => {
     const hash = window.location.hash;
-    fetchRandomColor(hash || null);
+    fetchColorData(hash || '');
   });
 
   colorData(cd => {
@@ -47,7 +43,9 @@
 
   <button type="button"
     class="colorswatch" 
-    on:click={fetchRandomColor}
+    on:click={() => {
+      fetchColorData('');
+    }}
     aria-label="Generate a random color"
     >
     <div class="color-details">
