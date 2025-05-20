@@ -29,6 +29,9 @@ jobs:
           name: production-files
           path: ./dist
 
+      - name: list dist
+        run: ls -la ./dist
+
   deploy:
     name: Deploy
     needs: build
