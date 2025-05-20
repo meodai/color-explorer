@@ -6,26 +6,31 @@
   import { derived } from 'svelte/store';
 
   // Subscribe to store
-  const { subscribe, fetchRandomColorData } = colorStore;
+  const { subscribe, fetchColorData } = colorStore;
   const colorData = subscribe;
 
   // Visibility derived from hex
   const isVisible = derived(colorStore, $c => Boolean($c.hex));
-  let isStarted = true;
 
   function fetchRandomColor() {
     console.clear();
     console.log('Fetching random color...');
-    isStarted = false;
-    fetchRandomColorData();
+    fetchColorData();
   }
 
   onMount(() => {
     fetchRandomColor();
   });
+
+  /*
+        similarColors: returnedColors.filter(c => c.hex !== hex),
+      description: cd.description[0] || '',
+      descriptionList: cd.getDescriptiveList(),
+      meanings: cd.meanings,
+      */
 </script>
 
-<main style="--c-color: {$colorStore.hex};">
+<main style="--c-color: {$colorStore.hex}; --c-contrast: {$colorStore.bestContrast};">
 
   <button type="button"
     class="colorswatch" 
@@ -35,10 +40,15 @@
     <div class="color-details">
       <span class="color-name">{$colorStore.name}</span>
       <span class="color-value">{$colorStore.hex}</span>
+      <span>Click for new color</span>
     </div>
   </button>
   
   <div class="info-container">
+    {#if $colorStore.description}
+      <p>{$colorStore.description}</p>
+    {/if}
+
     {#if $colorStore.wikiArticles.length}
       <WikiArticle articles={$colorStore.wikiArticles} />
     {/if}
@@ -46,12 +56,38 @@
       <Definitions definitions={$colorStore.definitions} />
     {/if}
     <!-- etc for quotes and disambiguation components -->
+
+
+  </div>
+
+  <div class="similars">
+
+    
+    {#if $colorStore.similarColors.length}
+      <h2>Similar Colors</h2>
+      <ul>
+        {#each $colorStore.similarColors as col}
+          <li>
+            <button type="button" class="colorswatch" on:click={() => {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              colorStore.fetchColorData(col.hex)
+            }}
+            style="--c-color: {col.hex}; --c-contrast: {col.bestContrast};"
+            >
+              <div class="color-details">
+                <span class="color-name">{col.name}</span>
+                <span class="color-value">{col.hex}</span>
+                <span>Click for new color</span>
+              </div>
+            </button>
+          </li>
+        {/each}
+      </ul>
+    {/if}
   </div>
 </main>
 
 <style>
-  :root {
-  }
   
   main {
     max-width: 800px;
@@ -70,12 +106,34 @@
     position: relative;
     border: none;
     outline: none;
+    padding: 1rem;
+    color: var(--c-contrast);
+  }
+
+  ul, li {
+    list-style: none;
     padding: 0;
+    margin: 0;
+  }
+
+  ul:has(.colorswatch) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  ul .colorswatch {
+    height: auto;
+    margin: 0;
   }
   
   .color-details {
     text-align: center;
   }
+
+  .color-value {
+    display: block;
+  } 
   
   .color-name {
     display: block;

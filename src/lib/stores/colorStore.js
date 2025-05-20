@@ -1,6 +1,9 @@
 import { writable } from 'svelte/store';
 import { lookup, fetchDefinition, fetchWikiquote, fetchDisambiguationEntries, fetchArticleImages } from '../api-optimized.js';
 import { timeoutPromise } from '../timeout.js';
+import ColorDescription from "color-description";
+
+const SIMILAR_COLORS = 10;
 
 function nahWordsInExtremities(Word) {
   const nahWords = ['the','a','in','of','an','on'];
@@ -39,18 +42,51 @@ function createColorStore() {
   const { subscribe, set, update } = writable({
     name: '',
     hex: '',
+    similarColors: [],
+    description: '',
+    descriptionList: [],
+    meanings: [],
+    bestContrast: '',
     wikiArticles: [],
     definitions: [],
     quotes: [],
     disambiguations: []
   });
 
-  async function fetchRandomColorData() {
+  async function fetchColorData(requestedHex = '') {
     console.time('Total color data fetch');
-    const hex = '#'+Array(6).fill(0).map(() => Math.floor(Math.random()*16).toString(16)).join('');
-    const name = (await fetch(`https://api.color.pizza/v1/?values=${hex.slice(1)}&list=default`).then(r=>r.json())).colors[0].name;
+    const genHex =
+      requestedHex ||
+      "#" +
+        Array(6)
+          .fill(0)
+          .map(() => Math.floor(Math.random() * 16).toString(16))
+          .join("");
+    const returnedColors = (
+      await fetch(
+        `https://api.color.pizza/v1/?values=${new Array(SIMILAR_COLORS)
+          .fill(genHex.slice(1))
+          .join(",")}&list=default&noduplicates=true`
+      ).then((r) => r.json())
+    ).colors;
 
-    set({ name, hex, wikiArticles: [], definitions: [], quotes: [], disambiguations: [] });
+    const { name, hex, bestContrast } = returnedColors[0];
+
+    const cd = new ColorDescription(hex);
+
+    set({
+      name,
+      hex,
+      similarColors: returnedColors.filter(c => c.hex !== hex),
+      description: cd.description[0] || '',
+      descriptionList: cd.getDescriptiveList(),
+      meanings: cd.meanings,
+      bestContrast,
+      wikiArticles: [], 
+      definitions: [], 
+      quotes: [], 
+      disambiguations: [] 
+  });
 
     const parts = [...new Set([name, ...splitWords(name)])];
     console.log('Search terms:', parts);
@@ -116,16 +152,22 @@ function createColorStore() {
     set({
       name,
       hex,
+      similarColors: returnedColors.filter(c => c.hex !== hex),
+      description: cd.description[0] || '',
+      descriptionList: cd.getDescriptiveList(),
+      meanings: cd.meanings,
+      bestContrast,
       wikiArticles: articlesWithImages,
       definitions,
       quotes,
-      disambiguations
+      disambiguations: Array.isArray(disambiguations) ? disambiguations : []
     });
     
     console.timeEnd('Total color data fetch');
+
   }
 
-  return { subscribe, fetchRandomColorData };
+  return { subscribe, fetchColorData };
 }
 
 export const colorStore = createColorStore();
