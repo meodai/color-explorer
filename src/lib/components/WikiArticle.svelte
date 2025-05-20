@@ -29,10 +29,8 @@
 
 <style>
   .article {
-    background: #f9f9f9;
     padding: 1rem;
     margin-bottom: 1rem;
-    border-radius: 8px;
   }
   .article img {
     max-width: 100%;
