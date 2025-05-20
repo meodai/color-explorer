@@ -198,55 +198,5 @@
     text-align: center;
   }
   
-  /* Disambiguation styles */
-  .disambiguation {
-    padding: 1rem;
-    margin-bottom: 1rem;
-  }
   
-  .disambiguation p {
-    font-style: italic;
-  }
-  
-  .disambiguation-entries {
-    margin-top: 1rem;
-  }
-  
-  .disambiguation-entry {
-    padding: 1rem;
-    margin-bottom: 1rem;
-  }
-  
-  .disambiguation-entry h3 {
-    margin-top: 0;
-  }
-  
-  .disambiguation-thumbnail {
-    float: right;
-    max-width: 120px;
-    margin: 0 0 1rem 1rem;
-  }
-  
-  .loading {
-    text-align: center;
-    padding: 1rem;
-    font-style: italic;
-  }
-  
-  .no-entries {
-    text-align: center;
-    padding: 1rem;
-    font-style: italic;
-  }
-  
-  .read-more-link {
-    display: inline-block;
-    margin-top: 0.5rem;
-    text-decoration: none;
-  }
-  
-  .read-more-link:hover {
-    text-decoration: underline;
-  }
-
 </style>
