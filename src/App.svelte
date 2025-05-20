@@ -12,14 +12,27 @@
   // Visibility derived from hex
   const isVisible = derived(colorStore, $c => Boolean($c.hex));
 
-  function fetchRandomColor() {
+  function fetchRandomColor(hash) {
     console.clear();
     console.log('Fetching random color...');
-    fetchColorData();
+    fetchColorData(hash);
   }
 
+  // listen for hash changes
+  window.addEventListener('hashchange', () => {
+    const hash = window.location.hash;
+    console.log('Hash changed:', hash);
+    fetchRandomColor(hash || null);
+  });
+
   onMount(() => {
-    fetchRandomColor();
+    const hash = window.location.hash;
+    fetchRandomColor(hash || null);
+  });
+
+  colorData(cd => {
+    console.log('Color data:', cd);
+    window.location.hash = cd.hex;
   });
 
   /*
