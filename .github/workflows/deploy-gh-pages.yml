@@ -30,7 +30,7 @@ jobs:
           path: ./dist
 
       - name: list dist
-        run: ls -la ./dist
+        run: ls -la ./dist && ls -la ./dist/assets
 
   deploy:
     name: Deploy
