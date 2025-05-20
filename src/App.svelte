@@ -56,6 +56,27 @@
       <Definitions definitions={$colorStore.definitions} />
     {/if}
     <!-- etc for quotes and disambiguation components -->
+    {#if $colorStore.disambiguations.length}
+      <div class="disambiguation">
+        <h2>Disambiguation</h2>
+        <ul>
+          {#each $colorStore.disambiguations as disambiguation}
+            <WikiArticle articles={[disambiguation]} />
+          {/each}
+        </ul>
+      </div>
+    {/if}
+
+    {#if $colorStore.quotes.length}
+      <!--div class="quotes">
+        <h2>Quotes</h2>
+        <ul>
+          {#each $colorStore.quotes as quote}
+            <li>{JSON.stringify(quote)}</li>
+          {/each}
+        </ul>
+      </div-->
+    {/if}
 
 
   </div>
