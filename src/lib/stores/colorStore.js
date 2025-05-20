@@ -1,0 +1,131 @@
+import { writable } from 'svelte/store';
+import { lookup, fetchDefinition, fetchWikiquote, fetchDisambiguationEntries, fetchArticleImages } from '../api-optimized.js';
+import { timeoutPromise } from '../timeout.js';
+
+function nahWordsInExtremities(Word) {
+  const nahWords = ['the','a','in','of','an','on'];
+  const word = Word.toLowerCase();
+  return nahWords.some(nw => word.startsWith(nw+' ') || word.endsWith(' '+nw));
+}
+function splitWords(str) {
+  const nahWords = ['the','a','in','of','an','on'];
+  const arr = str.split(' ');
+  const result = new Set();
+  
+  // Add complete string first
+  result.add(str);
+  
+  // Add individual words that are meaningful
+  arr.forEach(item => {
+    if (item.length > 2 && !nahWords.includes(item.toLowerCase())) {
+      result.add(item);
+    }
+  });
+  
+  // Add meaningful two-word combinations if there are more than 2 words
+  if (arr.length > 2) {
+    for (let i = 0; i < arr.length - 1; i++) {
+      const combo = arr[i] + ' ' + arr[i+1];
+      if (!nahWordsInExtremities(combo)) {
+        result.add(combo);
+      }
+    }
+  }
+  
+  return [...result];
+}
+
+function createColorStore() {
+  const { subscribe, set, update } = writable({
+    name: '',
+    hex: '',
+    wikiArticles: [],
+    definitions: [],
+    quotes: [],
+    disambiguations: []
+  });
+
+  async function fetchRandomColorData() {
+    console.time('Total color data fetch');
+    const hex = '#'+Array(6).fill(0).map(() => Math.floor(Math.random()*16).toString(16)).join('');
+    const name = (await fetch(`https://api.color.pizza/v1/?values=${hex.slice(1)}&list=default`).then(r=>r.json())).colors[0].name;
+
+    set({ name, hex, wikiArticles: [], definitions: [], quotes: [], disambiguations: [] });
+
+    const parts = [...new Set([name, ...splitWords(name)])];
+    console.log('Search terms:', parts);
+
+    // Parallel lookups with timeouts
+    console.time('Wikipedia lookups');
+    const lookupPromises = parts.map(part => {
+      try {
+        return timeoutPromise(5000, lookup(part), `Wikipedia lookup for ${part}`).catch(err => {
+          console.warn(`Timed out or error for ${part}:`, err.message);
+          return null;
+        });
+      } catch (e) {
+        console.error(`Error looking up ${part}:`, e);
+        return Promise.resolve(null);
+      }
+    });
+    const lookupResults = await Promise.all(lookupPromises);
+    console.timeEnd('Wikipedia lookups');
+
+    // Process Wikipedia summaries
+    let disambiguations = [];
+    const wikiArticles = lookupResults
+      .filter(r => r && !r.isDisambiguation)
+      .map(r => ({ ...r }));
+    const disambResults = lookupResults.filter(r => r && r.isDisambiguation);
+    if (disambResults.length) {
+      // fetch random entries for the first disambiguation found
+      console.time('Disambiguation fetch');
+      disambiguations = await fetchDisambiguationEntries(disambResults[0].title);
+      console.timeEnd('Disambiguation fetch');
+    }
+
+    // Parallel definitions fetch
+    console.time('Definitions fetch');
+    const defResults = await Promise.all(parts.map(p => fetchDefinition(p)));
+    const definitions = defResults.filter(d => d).flat();
+    console.timeEnd('Definitions fetch');
+
+    // Parallel wikiquote fetch
+    console.time('Wikiquote fetch');
+    const quoteResults = await Promise.all(parts.map(p => fetchWikiquote(p)));
+    const quotes = quoteResults.filter(q => q);
+    console.timeEnd('Wikiquote fetch');
+
+    // fetch images for each non-disambiguation article with timeouts
+    console.time('Image fetch');
+    const imagesPromises = wikiArticles.map(a => {
+      try {
+        return timeoutPromise(4000, fetchArticleImages(a.title), `Images for ${a.title}`).catch(err => {
+          console.warn(`Image fetch timed out for ${a.title}:`, err.message);
+          return [];
+        });
+      } catch (e) {
+        console.error(`Error fetching images for ${a.title}:`, e);
+        return Promise.resolve([]);
+      }
+    });
+    const imagesArrays = await Promise.all(imagesPromises);
+    const articlesWithImages = wikiArticles.map((art, i) => ({ ...art, images: imagesArrays[i] }));
+    console.timeEnd('Image fetch');
+
+    set({
+      name,
+      hex,
+      wikiArticles: articlesWithImages,
+      definitions,
+      quotes,
+      disambiguations
+    });
+    
+    console.timeEnd('Total color data fetch');
+  }
+
+  return { subscribe, fetchRandomColorData };
+}
+
+export const colorStore = createColorStore();
