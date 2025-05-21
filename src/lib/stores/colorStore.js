@@ -3,7 +3,7 @@ import { lookup, fetchDefinition, fetchWikiquote, fetchDisambiguationEntries, fe
 import { timeoutPromise } from '../timeout.js';
 import ColorDescription from "color-description";
 
-const SIMILAR_COLORS = 10;
+const SIMILAR_COLORS = 40;
 
 function nahWordsInExtremities(Word) {
   const nahWords = ['the','a','in','of','an','on'];
@@ -189,6 +189,17 @@ function createColorStore() {
         b.class === "Image" || b.class === "Media"
       );
     });
+
+    // remove duplicates from arenaBlocks
+    const uniqueBlocks = new Map();
+    arenaBlocks.forEach(block => {
+      if (!uniqueBlocks.has(block.id)) {
+        uniqueBlocks.set(block.id, block);
+      }
+    }
+    );
+    arenaBlocks = Array.from(uniqueBlocks.values());
+    // remove duplicates from wikiArticles
 
     set({
       name,
