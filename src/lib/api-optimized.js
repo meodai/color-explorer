@@ -254,3 +254,35 @@ export async function fetchArticleImages(title, locale = 'en', limit = 20) {
     return [];
   }
 }
+
+// Fetch Are.na blocks search for a given query
+export async function fetchArenaBlocks(query, per = 200) {
+  const cacheKey = `arena:${query}`;
+  const cachedItem = cache.getCached('arena', cacheKey);
+  if (cachedItem && cache.isValid(cachedItem)) {
+    return cachedItem.value;
+  }
+
+  try {
+    console.time(`Are.na blocks fetch: ${query}`);
+    const url = new URL('https://api.are.na/v2/search/blocks');
+    const params = new URLSearchParams();
+    params.append('q', query);
+    params.append('per', per.toString());
+    url.search = params.toString();
+    const res = await fetchWithTimeout(url, {}, 8000);
+    if (!res.ok) {
+      console.warn(`Are.na API returned status ${res.status} for query: ${query}`);
+      return [];
+    }
+    const data = await res.json();
+    console.timeEnd(`Are.na blocks fetch: ${query}`);
+
+    const blocks = data.blocks || [];
+    cache.setCached('arena', cacheKey, blocks);
+    return blocks;
+  } catch (err) {
+    console.error(`Error fetching Are.na blocks for ${query}:`, err);
+    return [];
+  }
+}

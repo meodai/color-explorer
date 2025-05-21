@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store';
-import { lookup, fetchDefinition, fetchWikiquote, fetchDisambiguationEntries, fetchArticleImages } from '../api-optimized.js';
+import { lookup, fetchDefinition, fetchWikiquote, fetchDisambiguationEntries, fetchArticleImages, fetchArenaBlocks } from '../api-optimized.js';
 import { timeoutPromise } from '../timeout.js';
 import ColorDescription from "color-description";
 
@@ -50,7 +50,8 @@ function createColorStore() {
     wikiArticles: [],
     definitions: [],
     quotes: [],
-    disambiguations: []
+    disambiguations: [],
+    arenaBlocks: [] // Are.na search results
   });
 
   async function fetchColorData(requestedHex = '') {
@@ -85,7 +86,8 @@ function createColorStore() {
       wikiArticles: [], 
       definitions: [], 
       quotes: [], 
-      disambiguations: [] 
+      disambiguations: [],
+      arenaBlocks: []
   });
 
     const parts = [...new Set([name, ...splitWords(name)])];
@@ -149,6 +151,26 @@ function createColorStore() {
     const articlesWithImages = wikiArticles.map((art, i) => ({ ...art, images: imagesArrays[i] }));
     console.timeEnd('Image fetch');
 
+    // fetch Are.na blocks for the color name
+    console.time('Arena fetch');
+    let arenaBlocks = [];
+    try {
+      arenaBlocks = await timeoutPromise(
+        5000,
+        fetchArenaBlocks(name),
+        `Are.na blocks for ${name}`
+      );
+    } catch (err) {
+      console.warn(`Are.na fetch error for ${name}:`, err.message);
+    }
+    console.timeEnd('Arena fetch');
+
+    arenaBlocks = arenaBlocks.filter((b) => {
+      return (
+        b.class === "Image" || b.class === "Media"
+      );
+    });
+
     set({
       name,
       hex,
@@ -160,14 +182,18 @@ function createColorStore() {
       wikiArticles: articlesWithImages,
       definitions,
       quotes,
-      disambiguations: Array.isArray(disambiguations) ? disambiguations : []
+      disambiguations,
+      arenaBlocks
     });
-    
     console.timeEnd('Total color data fetch');
-
   }
 
-  return { subscribe, fetchColorData };
+  return {
+    subscribe,
+    set,
+    update,
+    fetchColorData
+  };
 }
 
 export const colorStore = createColorStore();

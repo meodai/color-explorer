@@ -5,6 +5,8 @@
   import Definitions from './lib/components/Definitions.svelte';
   import { derived } from 'svelte/store';
 
+  import InfiniteView from './lib/components/InfiniteView.svelte';
+
   // Subscribe to store
   const { subscribe, fetchColorData } = colorStore;
   const colorData = subscribe;
@@ -37,6 +39,12 @@
       descriptionList: cd.getDescriptiveList(),
       meanings: cd.meanings,
       */
+
+   $: contents = [
+      {
+        'type': 'maincolor',
+      }
+   ]
 </script>
 
 <main style="--c-color: {$colorStore.hex}; --c-contrast: {$colorStore.bestContrast};">
@@ -66,6 +74,7 @@
     {#if $colorStore.definitions.length}
       <Definitions definitions={$colorStore.definitions} />
     {/if}
+
     <!-- etc for quotes and disambiguation components -->
     {#if $colorStore.disambiguations.length}
       <div class="disambiguation">
@@ -75,6 +84,17 @@
             <WikiArticle articles={[disambiguation]} />
           {/each}
         </ul>
+      </div>
+    {/if}
+
+    <h2>Are.na</h2>
+    {#if $colorStore.arenaBlocks.length}
+      <div class="arena-blocks">
+        {#each $colorStore.arenaBlocks as block}
+          {#if block.image && block.image.display}
+            <img src={block.image.display.url} alt={block.title} loading="lazy" />
+          {/if}
+        {/each}
       </div>
     {/if}
 

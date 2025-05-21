@@ -4,7 +4,8 @@ const cache = {
   definitions: new Map(),
   quotes: new Map(),
   images: new Map(),
-  disambiguations: new Map()
+  disambiguations: new Map(),
+  arena: new Map() // <-- cache for Are.na blocks
 };
 
 export function getCached(type, key) {
