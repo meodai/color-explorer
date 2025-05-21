@@ -193,11 +193,10 @@ function createColorStore() {
     // remove duplicates from arenaBlocks
     const uniqueBlocks = new Map();
     arenaBlocks.forEach(block => {
-      if (!uniqueBlocks.has(block.id)) {
-        uniqueBlocks.set(block.id, block);
+      if (!uniqueBlocks.has(block.title || block.id)) {
+        uniqueBlocks.set(block.title || block.id, block);
       }
-    }
-    );
+    });
     arenaBlocks = Array.from(uniqueBlocks.values());
     // remove duplicates from wikiArticles
 
