@@ -3,6 +3,7 @@
   import { colorStore } from './lib/stores/colorStore.js';
   import WikiArticle from './lib/components/WikiArticle.svelte';
   import Definitions from './lib/components/Definitions.svelte';
+  import ArenaBlocks from './lib/components/ArenaBlocks.svelte';
   import { derived } from 'svelte/store';
 
   import InfiniteView from './lib/components/InfiniteView.svelte';
@@ -87,15 +88,8 @@
       </div>
     {/if}
 
-    <h2>Are.na</h2>
     {#if $colorStore.arenaBlocks.length}
-      <div class="arena-blocks">
-        {#each $colorStore.arenaBlocks as block}
-          {#if block.image && block.image.display}
-            <img src={block.image.display.url} alt={block.title} loading="lazy" />
-          {/if}
-        {/each}
-      </div>
+      <ArenaBlocks blocks={$colorStore.arenaBlocks} />
     {/if}
 
     {#if $colorStore.quotes.length}

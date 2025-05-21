@@ -155,13 +155,32 @@ function createColorStore() {
     console.time('Arena fetch');
     let arenaBlocks = [];
     try {
-      arenaBlocks = await timeoutPromise(
-        5000,
-        fetchArenaBlocks(name),
-        `Are.na blocks for ${name}`
-      );
+      // Use the same parts array as Wikipedia lookups
+      const arenaPromises = parts.map(part => {
+        return timeoutPromise(
+          5000,
+          fetchArenaBlocks(part),
+          `Are.na blocks for ${part}`
+        ).catch(err => {
+          console.warn(`Are.na fetch error for ${part}:`, err.message);
+          return [];
+        });
+      });
+      const arenaResults = await Promise.all(arenaPromises);
+      
+      // Combine all blocks from different search terms, removing duplicates by ID
+      const blockMap = new Map();
+      arenaResults.forEach(blocks => {
+        blocks.forEach(block => {
+          if (!blockMap.has(block.id)) {
+            blockMap.set(block.id, block);
+          }
+        });
+      });
+      
+      arenaBlocks = Array.from(blockMap.values());
     } catch (err) {
-      console.warn(`Are.na fetch error for ${name}:`, err.message);
+      console.warn(`Are.na fetch error:`, err.message);
     }
     console.timeEnd('Arena fetch');
 
