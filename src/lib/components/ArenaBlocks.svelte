@@ -50,7 +50,7 @@
     width: 100%;
     height: auto;
     display: block;
-    object-fit: cover;
+    object-fit: contain;
     aspect-ratio: 1 / 1;
   }
   
