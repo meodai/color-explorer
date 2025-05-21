@@ -11,7 +11,7 @@ function nahWordsInExtremities(Word) {
   return nahWords.some(nw => word.startsWith(nw+' ') || word.endsWith(' '+nw));
 }
 function splitWords(str) {
-  const nahWords = ['the','a','in','of','an','on'];
+  const nahWords = ['the','a','in','of','an','on','and','or','for','to','is','are','was','were','be','by','with'];
   const arr = str.split(' ');
   const result = new Set();
   

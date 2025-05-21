@@ -40,8 +40,6 @@
   .arena-block {
     margin: 0;
     padding: 0;
-    background-color: #f9f9f9;
-    border-radius: 4px;
     overflow: hidden;
     position: relative;
   }
@@ -58,6 +56,5 @@
     padding: 0.5rem;
     font-size: 0.8rem;
     text-align: center;
-    background: rgba(255,255,255,0.9);
   }
 </style>
